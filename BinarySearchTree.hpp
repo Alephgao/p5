@@ -339,22 +339,7 @@ private:
     }
   }
 
-  // 1! = 1
-  // 4! = 4 * 3! 
-  // 5! = 5 * 4! 
-  int factorial(int n) {
-    if(n == 1) {
-      // base case
-      return 1;
-    }
 
-    // recursive step
-    return n *  factorial(n - 1);
-  }
-
-  // factorial(1) = 1
-  // factorial(2) = 2
-  // factorial(3) = 3 * factorial(2)
    
   // EFFECTS: Returns the size of the tree rooted at 'node', which is the
   //          total number of nodes in that tree. The size of an empty
@@ -424,7 +409,7 @@ private:
   //       Two elements A and B are equivalent if and only if A is
   //       not less than B and B is not less than A.
   static Node * find_impl(Node *node, const T &query, Compare less) {
-    if (node == nullptr || !(less(node->datum,query)||less(node->datum,query))){
+    if (node == nullptr || !(less(query,node->datum)||less(node->datum,query))){
       return node;
     }
     if(less(node->datum,query)){
@@ -510,7 +495,7 @@ private:
     if (node->left != nullptr && !(less(node->left->datum,node->datum))){
       return false;
     }
-    if (node->right != nullptr && !(less(node->right->datum,node->datum))){
+    if (node->right != nullptr && (less(node->right->datum,node->datum))){
       return false;
     }
     return check_sorting_invariant_impl(node->left, less)&&check_sorting_invariant_impl(node->right,less);
