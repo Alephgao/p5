@@ -32,6 +32,25 @@ private:
 
   // A custom comparator
   class PairComp {
+
+    bool operator() (Pair_type lhs, Pair_type rhs){
+
+
+
+      Key_compare less;
+
+      if (less(lhs.first,rhs.first)){
+        return true;
+      }
+      else{
+        return false;
+      }
+      
+    }
+
+    //PairComp(lhs, rhs) return true if lhs < rhs
+
+    // less(lhs, rhs) //
   };
 
 public:
@@ -61,11 +80,15 @@ public:
 
 
   // EFFECTS : Returns whether this Map is empty.
-  bool empty() const;
+  bool empty() const{
+    return tree.empty();
+  }
 
   // EFFECTS : Returns the number of elements in this Map.
   // NOTE : size_t is an integral type from the STL
-  size_t size() const;
+  size_t size() const{
+    return tree.size();
+  }
 
   // EFFECTS : Searches this Map for an element with a key equivalent
   //           to k and returns an Iterator to the associated value if found,
@@ -74,7 +97,14 @@ public:
   // HINT: Since Map is implemented using a BinarySearchTree that stores
   //       (key, value) pairs, you'll need to construct a dummy value
   //       using "Value_type()".
-  Iterator find(const Key_type& k) const;
+  Iterator find(const Key_type& k) const {
+    if (tree.empty()){
+      return tree.end();
+    }
+    //need to finish
+  }
+
+
 
   // MODIFIES: this
   // EFFECTS : Returns a reference to the mapped value for the given
@@ -105,13 +135,16 @@ public:
   std::pair<Iterator, bool> insert(const Pair_type &val);
 
   // EFFECTS : Returns an iterator to the first key-value pair in this Map.
-  Iterator begin() const;
+  Iterator begin() const{
+    // return 
+  }
 
   // EFFECTS : Returns an iterator to "past-the-end".
   Iterator end() const;
 
 private:
-  // Add a BinarySearchTree private member HERE.
+  BinarySearchTree<Pair_type, PairComp> tree; 
+  
 };
 
 // You may implement member functions below using an "out-of-line" definition
