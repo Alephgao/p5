@@ -364,7 +364,7 @@ private:
     if (empty_impl(node)){
       return 0;
     }
-    return size_imple(node->left) + size_impl(node->right) + 1;
+    return size_impl(node->left) + size_impl(node->right) + 1;
   }
 
   // EFFECTS: Returns the height of the tree rooted at 'node', which is the
@@ -428,10 +428,10 @@ private:
       return node;
     }
     if(less(node->datum,query)){
-      find_impl(node->right, query, less);
+      return find_impl(node->right, query, less);
     }
     else{
-      find_impl(node->left,query,less);
+      return find_impl(node->left,query,less);
     }
   }
 
@@ -452,7 +452,7 @@ private:
   //       parameter to compare elements.
   static Node * insert_impl(Node *node, const T &item, Compare less) {
     if (node == nullptr){
-      return new Node(item);
+      return new Node(item, nullptr, nullptr);
     }
     if (less(item,node->datum)){
       node->left = insert_impl(node->left, item, less);
