@@ -32,19 +32,14 @@ private:
 
   // A custom comparator
   class PairComp {
-
-    bool operator() (Pair_type lhs, Pair_type rhs){
+public:
+    bool operator() (Pair_type lhs, Pair_type rhs) const {
 
 
 
       Key_compare less;
 
-      if (less(lhs.first,rhs.first)){
-        return true;
-      }
-      else{
-        return false;
-      }
+      return less(lhs.first, rhs.first);
       
     }
 
@@ -101,7 +96,9 @@ public:
     if (tree.empty()){
       return tree.end();
     }
-    //need to finish
+    Pair_type dummyPair(k, Value_type());
+    return tree.find(dummyPair);
+
   }
 
 
@@ -122,7 +119,10 @@ public:
   //           that element. This ensures the proper value-initialization is done.
   //
   // HINT: http://www.cplusplus.com/reference/map/map/operator[]/
-  Value_type& operator[](const Key_type& k);
+  Value_type& operator[](const Key_type& k){
+    Pair_type dummyPair(k, Value_type());
+    return insert(dummyPair).first->second;
+  }
 
   // MODIFIES: this
   // EFFECTS : Inserts the given element into this Map if the given key
@@ -132,15 +132,27 @@ public:
   //           false. Otherwise, inserts the given element and returns
   //           an iterator to the newly inserted element, along with
   //           the value true.
-  std::pair<Iterator, bool> insert(const Pair_type &val);
+  std::pair<Iterator, bool> insert(const Pair_type &val){
+    Pair_type dummyPair(val.first, Value_type()); 
+    auto existing_it = tree.find(dummyPair);
+    if (existing_it != tree.end()){
+      return std::make_pair(existing_it, false);
+    }
+    else{
+      auto inserted_it = tree.insert(val);
+      return std::make_pair(inserted_it, true);
+    }
+  }
 
   // EFFECTS : Returns an iterator to the first key-value pair in this Map.
   Iterator begin() const{
-    // return 
+    return tree.begin();
   }
 
   // EFFECTS : Returns an iterator to "past-the-end".
-  Iterator end() const;
+  Iterator end() const{
+    return tree.end();
+  }
 
 private:
   BinarySearchTree<Pair_type, PairComp> tree; 
