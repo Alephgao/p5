@@ -15,7 +15,6 @@
  * for the private static member functions as directed.
  */
 
-#include <__config>
 #include <cassert>  //assert
 #include <iostream> //ostream
 #include <functional> //less
