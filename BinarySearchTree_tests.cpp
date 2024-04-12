@@ -287,7 +287,7 @@ TEST(combined_bst_tests) {
     ASSERT_TRUE(oss_inorder.str() != "10 20 30 40 "); 
 
     // Uncomment the following line when submit to auto!
-    //tree = tree;
+    tree = tree;
     ASSERT_FALSE(tree.height() == 3);
 
     tree = emptyTree;
@@ -310,6 +310,50 @@ TEST(combined_bst_tests) {
     ASSERT_TRUE(complexTree.height() == 4);
     ASSERT_TRUE(complexTree.check_sorting_invariant());
 }
+
+TEST(test_magical_forest_operations) {
+  BinarySearchTree<int> EnchantedTree;
+
+  ASSERT_TRUE(EnchantedTree.empty());
+  std::cout << "Initial Enchanted Tree (should be empty): " << EnchantedTree.to_string() << std::endl;
+
+  EnchantedTree.insert(20);
+  EnchantedTree.insert(10);
+  EnchantedTree.insert(30);
+  EnchantedTree.insert(5);
+  EnchantedTree.insert(15);
+  EnchantedTree.insert(25);
+  EnchantedTree.insert(35);
+
+  ASSERT_TRUE(EnchantedTree.size() == 7);
+  ASSERT_TRUE(EnchantedTree.height() == 3);
+  ASSERT_TRUE(EnchantedTree.check_sorting_invariant());
+
+  ASSERT_TRUE(EnchantedTree.find(25) != EnchantedTree.end());
+  ASSERT_TRUE(EnchantedTree.find(40) == EnchantedTree.end()); 
+
+  std::ostringstream oss_inorder, oss_preorder;
+  EnchantedTree.traverse_inorder(oss_inorder);
+  EnchantedTree.traverse_preorder(oss_preorder);
+
+  std::cout << "In-order traversal of Enchanted Tree: " << oss_inorder.str() << std::endl;
+  std::cout << "Pre-order traversal of Enchanted Tree: " << oss_preorder.str() << std::endl;
+
+  ASSERT_TRUE(oss_inorder.str() == "5 10 15 20 25 30 35 ");
+  ASSERT_TRUE(oss_preorder.str() == "20 10 5 15 30 25 35 ");
+
+  ASSERT_TRUE(*EnchantedTree.min_element() == 5);
+  ASSERT_TRUE(*EnchantedTree.max_element() == 35);
+
+  ASSERT_TRUE(*EnchantedTree.min_greater_than(15) == 20);
+  ASSERT_TRUE(*EnchantedTree.min_greater_than(22) == 25);
+
+  *EnchantedTree.find(35) = 0;
+  ASSERT_FALSE(EnchantedTree.check_sorting_invariant()); 
+
+  std::cout << "Modified Enchanted Tree (max element altered): " << EnchantedTree.to_string() << std::endl;
+}
+
 
 
 TEST_MAIN()
