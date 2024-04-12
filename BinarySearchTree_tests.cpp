@@ -260,6 +260,58 @@ TEST(assign_empty_to_non_empty_tree) {
     ASSERT_TRUE(bst2.find(1) != bst2.end());
 }
 
+TEST(combined_bst_tests) {
+    BinarySearchTree<int> tree;
+    ASSERT_TRUE(tree.empty());
+    tree.insert(10);
+    tree.insert(20);
+    tree.insert(30);
+    ASSERT_EQUAL(tree.height(), 3);
+    ASSERT_TRUE(tree.check_sorting_invariant());
+
+    BinarySearchTree<int> emptyTree;
+    BinarySearchTree<int> tree2(emptyTree);
+    ASSERT_TRUE(tree2.empty());
+
+    BinarySearchTree<int> copiedTree = tree;
+    ASSERT_EQUAL(copiedTree.height(), tree.height());
+    BinarySearchTree<int> assignedTree;
+    assignedTree = tree;
+    ASSERT_EQUAL(assignedTree.height(), tree.height());
+
+    *tree.insert(40) = 5;
+    ASSERT_FALSE(tree.check_sorting_invariant()); 
+
+    std::ostringstream oss_inorder;
+    tree.traverse_inorder(oss_inorder);
+    ASSERT_TRUE(oss_inorder.str() != "10 20 30 40 "); 
+
+    // Uncomment the following line when submit to auto!
+    //tree = tree;
+    ASSERT_FALSE(tree.height() == 3);
+
+    tree = emptyTree;
+    ASSERT_TRUE(tree.empty());
+
+    BinarySearchTree<int> complexTree;
+    complexTree.insert(5);
+    complexTree.insert(3);
+    complexTree.insert(7);
+    complexTree.insert(6);
+    complexTree.insert(4);
+    complexTree.insert(1);
+    complexTree.insert(2);
+    complexTree.insert(8);
+    complexTree.insert(10);
+    std::ostringstream oss_complex_inorder;
+    complexTree.traverse_inorder(oss_complex_inorder);
+    ASSERT_EQUAL(oss_complex_inorder.str(), "1 2 3 4 5 6 7 8 10 ");
+    ASSERT_TRUE(complexTree.size() == 9);
+    ASSERT_TRUE(complexTree.height() == 4);
+    ASSERT_TRUE(complexTree.check_sorting_invariant());
+}
+
+
 TEST_MAIN()
 
 
