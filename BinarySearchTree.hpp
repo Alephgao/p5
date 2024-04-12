@@ -374,15 +374,27 @@ private:
   //          with the same elements and EXACTLY the same structure as the
   //          tree rooted at 'node'.
   // NOTE:    This function must be tree recursive.
+  /*
   static Node *copy_nodes_impl(Node *node) {
     if (node == nullptr){
       return nullptr;
     }
-    Node *newNode = new Node(node->datum);
+    Node *newNode = new Node(node->datum); // here we got a problem
     newNode->left = copy_nodes_impl(node->left);
     newNode->right = copy_nodes_impl(node->right);
     return newNode;
   }
+*/
+  static Node *copy_nodes_impl(Node *node) {
+    if (node == nullptr) {
+        return nullptr;
+    }
+    Node *newNode = new Node(node->datum, nullptr, nullptr);
+    newNode->left = copy_nodes_impl(node->left);
+    newNode->right = copy_nodes_impl(node->right);
+    return newNode;
+}
+
 
   // EFFECTS: Frees the memory for all nodes used in the tree rooted at 'node'.
   // NOTE:    This function must be tree recursive.
