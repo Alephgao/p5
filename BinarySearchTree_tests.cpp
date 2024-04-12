@@ -51,7 +51,6 @@ TEST(HeightTest) {
     ASSERT_EQUAL(OpenAI.height(), 3);
 }
 
-// Test copy constructor
 TEST(CopyConstructorTest) {
     BinarySearchTree<int> Google;
     Google.insert(13);
@@ -85,7 +84,7 @@ struct ReverseCompare {
   }
 };
 
-TEST(CustomCompareTest) {
+TEST(CustomCompare) {
   BinarySearchTree<int, ReverseCompare> reverse_bst;
   reverse_bst.insert(50);
   reverse_bst.insert(30);
@@ -107,7 +106,7 @@ TEST(CustomCompareTest) {
   ASSERT_EQUAL(*max_it, 10); 
 }
 
-TEST(BasicOperationsTest) {
+TEST(BasicOperations) {
     BinarySearchTree<int> EssentialsTree;
     EssentialsTree.insert(20);
     EssentialsTree.insert(10);
@@ -122,7 +121,7 @@ TEST(BasicOperationsTest) {
     ASSERT_EQUAL(EssentialsTree.size(), 7);
 }
 
-TEST(InsertionIntegrityAndInvariantCheckTest) {
+TEST(Insertion) {
     BinarySearchTree<int> IntegrityTree;
     IntegrityTree.insert(20);
     IntegrityTree.insert(30);
@@ -156,23 +155,6 @@ TEST(IteratorIncrementTest) {
 }
 
 
-TEST(ComplexOperationsAndEdgeCases) {
-    BinarySearchTree<std::string> GalaxyTree;
-    GalaxyTree.insert("Andromeda");
-    GalaxyTree.insert("Milky Way");
-    GalaxyTree.insert("Whirlpool");
-    GalaxyTree.insert("Black Eye");
-    GalaxyTree.insert("Sunflower");
-
-    ASSERT_TRUE(GalaxyTree.find("Andromeda") != GalaxyTree.end());
-    ASSERT_EQUAL(GalaxyTree.size(), 5); // Ensure duplicate wasn't added
-
-    // Testing traversals and iterator validity after operations
-    std::stringstream in_order;
-    GalaxyTree.traverse_inorder(in_order);
-    ASSERT_EQUAL(in_order.str(), "Andromeda Black Eye Milky Way Sunflower Whirlpool ");
-}
-
 TEST(TraversalAndIteratorTests) {
     BinarySearchTree<std::string> FableTree;
     FableTree.insert("Alice");
@@ -184,10 +166,11 @@ TEST(TraversalAndIteratorTests) {
     FableTree.traverse_preorder(pre_order);
     FableTree.traverse_inorder(in_order);
 
+    ASSERT_TRUE(FableTree.find("Alice") == FableTree.begin());
+
     ASSERT_EQUAL(pre_order.str(), "Alice Cheshire Cat Queen of Hearts Mad Hatter ");
     ASSERT_EQUAL(in_order.str(), "Alice Cheshire Cat Mad Hatter Queen of Hearts ");
 
-    // Iterator increment test
     auto it = FableTree.begin();
     ASSERT_EQUAL(*it, "Alice");
     ++it;
@@ -213,5 +196,70 @@ TEST(CustomCompareAndToString) {
     ASSERT_EQUAL(*UtopiaTree.max_element(), "Earth");
 }
 
+TEST(IteratorTESTS) {
+    BinarySearchTree<int> Turing;
+    Turing.insert(1950);
+    Turing.insert(1912);
+    Turing.insert(1936);
+    Turing.insert(1927);
+    Turing.insert(1956);
+    Turing.insert(1983);
+    Turing.insert(1997);
+
+    auto Lovelace = Turing.begin();
+    ASSERT_EQUAL(*Lovelace, 1912);
+    ++Lovelace;
+    ASSERT_EQUAL(*Lovelace, 1927);
+    Lovelace++;
+    ASSERT_EQUAL(*Lovelace, 1936);
+    Lovelace = Turing.end();
+
+
+    auto Minerva = Turing.min_element();
+    ASSERT_EQUAL(*Minerva, 1912);
+    auto Minsky = Turing.max_element();
+    ASSERT_EQUAL(*Minsky, 1997);
+
+    auto Shannon = Turing.find(1936);
+    ASSERT_EQUAL(*Shannon, 1936);
+    auto Hopper = Turing.find(2042);
+    ASSERT_TRUE(Hopper == Turing.end());
+
+    auto Neumann = Turing.min_greater_than(1936);
+    ASSERT_EQUAL(*Neumann, 1950);
+
+    ASSERT_FALSE(Turing.empty());
+    ASSERT_EQUAL(Turing.size(), 7);
+}
+TEST(empty_sorting_invariance) {
+    BinarySearchTree<int> bst;
+    ASSERT_TRUE(bst.check_sorting_invariant());
+}
+
+TEST(single_element_handling) {
+    BinarySearchTree<int> bst;
+    bst.insert(42);
+    ASSERT_TRUE(bst.check_sorting_invariant());
+    ASSERT_EQUAL(bst.size(), 1);
+    ASSERT_EQUAL(*bst.begin(), 42);
+    ASSERT_EQUAL(*bst.min_element(), 42);
+    ASSERT_EQUAL(*bst.max_element(), 42);
+    ASSERT_TRUE(bst.find(42) != bst.end());
+    ASSERT_TRUE(bst.find(43) == bst.end());
+}
+
+
+TEST(assign_empty_to_non_empty_tree) {
+    BinarySearchTree<int> bst1;
+    bst1.insert(1);
+    BinarySearchTree<int> bst2;
+    bst2 = bst1; 
+    bst1 = BinarySearchTree<int>(); 
+    ASSERT_TRUE(bst1.empty());
+    ASSERT_EQUAL(bst2.size(), 1);
+    ASSERT_TRUE(bst2.find(1) != bst2.end());
+}
 
 TEST_MAIN()
+
+
