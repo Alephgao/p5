@@ -156,5 +156,62 @@ TEST(IteratorIncrementTest) {
 }
 
 
+TEST(ComplexOperationsAndEdgeCases) {
+    BinarySearchTree<std::string> GalaxyTree;
+    GalaxyTree.insert("Andromeda");
+    GalaxyTree.insert("Milky Way");
+    GalaxyTree.insert("Whirlpool");
+    GalaxyTree.insert("Black Eye");
+    GalaxyTree.insert("Sunflower");
+
+    ASSERT_TRUE(GalaxyTree.find("Andromeda") != GalaxyTree.end());
+    ASSERT_EQUAL(GalaxyTree.size(), 5); // Ensure duplicate wasn't added
+
+    // Testing traversals and iterator validity after operations
+    std::stringstream in_order;
+    GalaxyTree.traverse_inorder(in_order);
+    ASSERT_EQUAL(in_order.str(), "Andromeda Black Eye Milky Way Sunflower Whirlpool ");
+}
+
+TEST(TraversalAndIteratorTests) {
+    BinarySearchTree<std::string> FableTree;
+    FableTree.insert("Alice");
+    FableTree.insert("Cheshire Cat");
+    FableTree.insert("Queen of Hearts");
+    FableTree.insert("Mad Hatter");
+
+    std::stringstream pre_order, in_order;
+    FableTree.traverse_preorder(pre_order);
+    FableTree.traverse_inorder(in_order);
+
+    ASSERT_EQUAL(pre_order.str(), "Alice Cheshire Cat Queen of Hearts Mad Hatter ");
+    ASSERT_EQUAL(in_order.str(), "Alice Cheshire Cat Mad Hatter Queen of Hearts ");
+
+    // Iterator increment test
+    auto it = FableTree.begin();
+    ASSERT_EQUAL(*it, "Alice");
+    ++it;
+    ASSERT_EQUAL(*it, "Cheshire Cat");
+}
+
+TEST(CustomCompareAndToString) {
+    struct ReverseCompare {
+        bool operator()(const std::string& lhs, const std::string& rhs) const {
+            return lhs > rhs;
+        }
+    };
+
+    BinarySearchTree<std::string, ReverseCompare> UtopiaTree;
+    UtopiaTree.insert("Mercury");
+    UtopiaTree.insert("Venus");
+    UtopiaTree.insert("Earth");
+    UtopiaTree.insert("Mars");
+    UtopiaTree.insert("Jupiter");
+
+    ASSERT_EQUAL(UtopiaTree.size(), 5);
+    ASSERT_EQUAL(*UtopiaTree.min_element(), "Venus");
+    ASSERT_EQUAL(*UtopiaTree.max_element(), "Earth");
+}
+
 
 TEST_MAIN()
