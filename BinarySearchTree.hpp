@@ -18,6 +18,7 @@
 #include <cassert>  //assert
 #include <iostream> //ostream
 #include <functional> //less
+#include <sstream>     // For std::stringstream
 
 // You may add aditional libraries here if needed. You may use any
 // part of the STL except for containers.
