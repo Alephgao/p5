@@ -15,7 +15,7 @@
 
 using namespace std;
 
-// Code and comments written by A.G. and 
+// Hand written comments from AG
 
 
 // //OVERVIEW: This class is used to train a Bayesian trainer
@@ -103,10 +103,11 @@ public:
 
   void train(string file){
     openfile(file);
-    if(debug){
     cout << "trained on " << totalposts << " examples" << '\n';
-    }
+    if(debug){
     cout << "vocabulary size = " << words.size() << '\n';
+    }
+    
     cout << "\n";
     if(debug){
       cout << "classes:" << '\n';
@@ -238,7 +239,7 @@ private:
 
 public:
 
-    Classifier(bool debug, Bayestrainer model, string testfile, string trainfile): debug(debug), model(trainfile, debug),
+    Classifier(bool debug, string testfile, string trainfile): debug(debug), model(trainfile, debug),
     testfile(testfile), trainfile(trainfile), correct(0), total(0){}
 
 //OVERVIEW: This function trains the model
@@ -288,18 +289,47 @@ public:
 
 };
 
-int main(){
 
-  cout.precision(3);
-   
-  Bayestrainer model("train_small.csv", true);
+int main(int argc, char* argv[]){
+    cout.precision(3);
 
-  Classifier Class(true, model, "test_small.csv", "train_small.csv");
+    bool debug = false;
 
-  Class.modelinit();
+    string testfile;
+    string trainfile;
 
-  Class.train();
-  Class.test();
+    if(argc != 3 && argc != 4){
+      cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
+      return 10086;
+    }
 
+    if(argc == 4 && !strcmp(argv[3], " --debug")){
+      cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
+      return 10086;
+    }
+    
+    if(argc == 4){
+      debug = true;
+    }
+    
+    trainfile = argv[1];
+    testfile = argv[2];
+
+    try { csvstream csvin(trainfile); }
+    catch (const std::exception &e) {
+         cout << "Error opening file: " << trainfile << endl; return 10086;
+    }
+
+    try { csvstream csvin(testfile); }
+    catch (const std::exception &e) {
+         cout << "Error opening file: " << testfile << endl; return 10086;
+    }
+
+    Classifier Alex(debug, testfile, trainfile);
+
+    Alex.modelinit();
+
+    Alex.train();
+    Alex.test();
 
 }
