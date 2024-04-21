@@ -7,12 +7,19 @@
 #include <sstream>
 #include <string.h>
 #include "csvstream.hpp"
-#include "BinarySearchTree.hpp"
-#include "Map.hpp"
+#include <map>
 #include <set>
 #include <cmath>
+#include <algorithm>  // For std::set_union
+#include <iterator>   // For std::inserter
 
 using namespace std;
+
+// Code and comments written by A.G. and 
+
+
+// //OVERVIEW: This class is used to train a Bayesian trainer
+// //         It reads a csv file and trains the model
 
 set<string> unique_words(const string &str) {
     istringstream source(str);
@@ -24,196 +31,275 @@ set<string> unique_words(const string &str) {
     return words;
 }
 
-class Classifier {
-private :
-    bool debugToggle;
-    int totalPosts;
-    set<string> uniqueWords;
-    map<string, int> numPostsWithWord;
-    map<string, int> numPostsWithLabel;
-    map<pair<string, string>, int> numPostsWithLabelWithWord;
+//OVERVIEW: This function calculates the log probability of a word given a label
+//          The formula used is:
+//          log(Prob(word|label)) = log(num_posts_with_word_label/num_posts_with_label)
+//          if this word is not found in the label but found in posts, then the probability is defined as
+//          log(Prob(word|label)) = log(num_posts_with_word/totalposts)
+//          if this word is never seen, themn we use
+//          log(Prob(word|label)) = log(1/totalposts)
+double calcprob(int wlp, int lp, int wp, int totalposts){
+  if(wlp == 0){
+    if(wp == 0){
+        return log(1.0/totalposts);
+    }
+    else{
+        return log(1.0*wp/totalposts);
+    }
+  }
 
-    void countWords(const string &content) {
-        set<string> uniqueContent = unique_words(content);
-        for(auto &word: uniqueContent) {
-            uniqueWords.insert(word);
+  return log(1.0*wlp/lp);
+
+}
+
+class Bayestrainer{
+
+private:
+  string file;
+  int totalposts;
+  set <string> words;
+  bool debug;
+
+  map<string, int> num_posts_with_word;
+
+  map<string, int> num_posts_with_label;
+
+  map<pair<string, string>, int> num_posts_with_label_with_word;
+
+public:
+
+  Bayestrainer(string file, bool debug ): file(file), totalposts(0),  debug(debug){}
+
+
+
+  void openfile(string file){
+    csvstream csvin(file);
+
+    map<string, string> row;
+
+    if(debug) {
+            cout << "training data:" << '\n';
+    }
+
+    while(csvin >> row){
+
+        totalposts++;
+        string content = row["content"];
+        string label = row["tag"];
+
+        count_words(content);
+        num_posts_word(content);
+        num_posts_label(label);
+        num_posts_word_label(content, label);
+
+        if(debug){
+          cout << "  label = " << row["tag"] << ", content = " << row["content"] 
+                << '\n';
         }
     }
 
-    void numPostsWord(const string &content) {
-        set<string> uniqueContent = unique_words(content);
-        for(auto &word: uniqueWords) {
-            if(uniqueContent.find(word) != uniqueContent.end()) {
-                numPostsWithWord[word]++;
-            }
-        }
+
+  }
+
+  void train(string file){
+    openfile(file);
+    if(debug){
+    cout << "trained on " << totalposts << " examples" << '\n';
+    }
+    cout << "vocabulary size = " << words.size() << '\n';
+    cout << "\n";
+    if(debug){
+      cout << "classes:" << '\n';
+      for(auto &iter: num_posts_with_label) {
+          string label = iter.first;
+          int numPosts = num_posts_with_label.at(label);
+          cout << "  " << label << ", " << numPosts << " examples, log-prior = " 
+          << log(1.0*numPosts/totalposts) << '\n';
+      }
     }
 
-    void numPostsLabel(const string &label) {
-        numPostsWithLabel[label]++;
-    }
-
-    void numPostsWordLabel(const string &content, const string &label) {
-        set<string> unique = unique_words(content);
-        for(auto &word: unique) {
-            numPostsWithLabelWithWord[{word, label}]++;
-        }
-    }
-
-    pair<string, double> calcProb(const string &allContent) const {
-        set<string> content = unique_words(allContent);
-        double maxProb = -INFINITY;
-        string maxLabel;
-        for(auto &iter: numPostsWithLabel) {
-            double prob = 0;
-            string label = iter.first;
-            prob += log(1.0*numPostsWithLabel.at(label)/totalPosts);
-            for(auto &word: content) {
-                if(!numPostsWithWord.count(word)) {
-                    prob += log(1.0/totalPosts);
-                }
-                else if(!numPostsWithLabelWithWord.count({word, label})) {
-                    prob += log(1.0*numPostsWithWord.at(word)/totalPosts);
-                }
-                else {
-                    prob += log(1.0*numPostsWithLabelWithWord.at({word, label})
-                                /numPostsWithLabel.at(label));
-                }
-            }
-            if(prob > maxProb) {
-                maxProb = prob;
-                maxLabel = label;
-            }
-        }
-        return {maxLabel, maxProb};
-    }
-        
-public :
-    Classifier(bool debug) :
-        debugToggle(debug), totalPosts(0) { }
-
-    void train(string filename) {
-        csvstream csvin(filename);
-        map<string, string> row;
-        if(debugToggle) {
-            cout << "training data:" << endl;
-        }
-        while(csvin >> row) {
-            totalPosts++;
-            countWords(row["content"]);
-            numPostsWord(row["content"]);
-            numPostsLabel(row["tag"]);
-            numPostsWordLabel(row["content"], row["tag"]);
-            if(debugToggle) {
-                cout << "  label = " << row["tag"] << ", content = " << row["content"] 
-                << endl;
-            }
-        }
-    }
-
-    void printFirstDebug(const string &content, const string &label) const {
-        cout << "  label = " << label << ", content = " << content << endl;
-    }
-
-    void printSecondDebug() const {
-        cout << "classes:" << endl;
-        for(auto &iter: numPostsWithLabel) {
-            string label = iter.first;
-            int numPosts = numPostsWithLabel.at(label);
-            cout << "  " << label << ", " << numPosts << " examples, log-prior = " 
-            << log(1.0*numPosts/totalPosts) << endl;
-        }
-    }
-
-    void printThirdDebug() const {
+    if(debug){
         cout << "classifier parameters:" << endl;
-        for(auto &iter: numPostsWithLabel) {
+        for(auto &iter: num_posts_with_label) {
             string label = iter.first;
-            for(auto &word: uniqueWords) {
-                if(numPostsWithLabelWithWord.count({word, label})) {
-                    int count = numPostsWithLabelWithWord.at({word, label});
+            for(string word: words) {
+                if(num_posts_with_label_with_word.count({word, label})) {
+                    int count = num_posts_with_label_with_word.at({word, label});
                     cout << "  " << label << ":" << word << ", count = " << count
                     << ", log-likelihood = " 
-                    << log(1.0*count/numPostsWithLabel.at(label)) << endl;
+                    << log(1.0*count/num_posts_with_label.at(label)) << '\n';
                 }
             }
         }
-        cout << endl;
+        cout << '\n';
     }
-
-    void printNumPosts() const {
-        cout << "trained on " << totalPosts << " examples" << endl;
-    }
-
-    void printNumWords() const {
-        cout << "vocabulary size = " << uniqueWords.size() << endl;
-    }
-
-    void test(string filename) const {
-        cout << "test data:" << endl;
-        csvstream csvin(filename);
-        int numCorrect = 0; int totalNum = 0;
     
-        map<string, string> row;
-        // run the classifier on the data
-        while(csvin >> row) {
-            if(row["tag"] == calcProb(row["content"]).first) {
-                numCorrect++;
-            }
-            totalNum++;
-            cout << "  correct = " << row["tag"] << ", predicted = " << 
-            calcProb(row["content"]).first << ", log-probability score = " <<
-            calcProb(row["content"]).second << endl;
-            cout << "  content = " << row["content"] << endl << endl;
+  }
+
+//OVERVIEW: This function calculates the probability of a word given a label
+//          Log probability is used to avoid underflow
+//          The formula used is:
+//          log(Prob(word|label)) = log(num_posts_with_word_label/num_posts_with_label) 
+//          if this word is not found in the label but found in posts, then the probability is defined as
+//          log(Prob(word|label)) = log(num_posts_with_word/totalposts)
+//          if this word is never seen, themn we use
+//          log(Prob(word|label)) = log(1/totalwords)
+
+pair<string, double> calc_prob(const string &content) const{
+    auto content_words = unique_words(content);
+    double max_prob = -numeric_limits<double>::infinity();
+    string best_label;
+    
+    for (const auto &label_count : num_posts_with_label) {
+        const string &label = label_count.first;
+        double label_prob = log(1.0*label_count.second / totalposts);
+        double log_likelihood = label_prob;
+
+        for (const string &word : content_words) {
+            int wlp = num_posts_with_label_with_word.count({word, label}) 
+            ? num_posts_with_label_with_word.at({word, label}) : 0;
+
+            int wp = num_posts_with_word.count(word) ? num_posts_with_word.at(word) : 0;
+
+            int lp = num_posts_with_label.at(label);
+
+            log_likelihood += calcprob(wlp, lp, wp, totalposts);
+            
         }
 
-        cout << "performance: " << numCorrect << " / " << totalNum << 
-        " posts predicted correctly" << endl;
+        if (log_likelihood > max_prob) {
+            max_prob = log_likelihood;
+            best_label = label;
+        }
     }
+
+    return {best_label, max_prob};
+  }
+
+private:
+
+//OVERVIEW: This function counts the number of words in the content
+//         and stores them in a set
+  void count_words(const string &content){
+    set<string> uniqcontent = unique_words(content);
+    set <string> result;
+
+
+    std::set_union(words.begin(), words.end(),
+                   uniqcontent.begin(), uniqcontent.end(),
+                   std::inserter(result, result.begin()));
+
+    words = std::move(result);
+  }
+
+//OVERVIEW: This function counts the number of posts with the word
+//         and stores them in a map
+  void num_posts_word(const string &content){
+    set <string> uniqcontent = unique_words(content);
+    for(string word: words){
+        if(uniqcontent.find(word) != uniqcontent.end()){
+            num_posts_with_word[word]++;
+        }
+    }
+  }
+
+//OVERVIEW: This function counts the number of posts with the label
+//         and stores them in a map
+  void num_posts_label(const string &label){
+    num_posts_with_label[label]++;
+  }
+
+//OVERVIEW: This function counts the number of posts with the word and label
+//         and stores them in a map
+  void num_posts_word_label(const string &content, const string &label){
+    set <string > uniqcontent = unique_words(content);
+    for(string word: uniqcontent){
+        num_posts_with_label_with_word[{word, label}]++;
+    }
+  }
+
+
 };
 
-int main(int argc, char *argv[]) {
-    cout.precision(3);
+class Classifier {
 
-    //error checking
-    if (argc != 3 && argc != 4) {
-        cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
-        return 1;
+private:
+  bool debug;
+
+  Bayestrainer model;
+
+  string testfile;
+
+  string trainfile;
+
+  int correct;
+
+  int total;
+
+public:
+
+    Classifier(bool debug, Bayestrainer model, string testfile, string trainfile): debug(debug), model(trainfile, debug),
+    testfile(testfile), trainfile(trainfile), correct(0), total(0){}
+
+//OVERVIEW: This function trains the model
+    void modelinit(){
+        model = Bayestrainer(trainfile, debug);
     }
 
-    if(argc == 4) {
-        if (!strcmp(argv[3], " --debug")){
-            cout << "Usage: main.exe TRAIN_FILE TEST_FILE [--debug]" << endl;
-            return 1;
-        }   
+    void train(){
+        model.train(trainfile);
     }
 
-    //Debugger/Output Toggle
-    bool debugToggle = false;
-    if(argc == 4) { debugToggle = true; }
 
-    string trainFileName = argv[1]; string testFileName = argv[2]; 
-    Classifier classi(debugToggle);
+//OVERVIEW: This function tests the model
+//          It reads a csv file and tests the model
+//          It calculates the probability of each label for each post
+//          It returns the label with the highest probability
+//          The formula for log-likelihood of a label given a post is:
+//          log(Prob(label|post)) = log(Prob(label)) + sum(log(Prob(word|label)))
 
-    // make sure that both input files open correctly
-    try { csvstream csvin(trainFileName); }
-    catch(const csvstream_exception &e) {
-        cout << "Error opening file: " << trainFileName << endl; return 1;
+
+
+  void test(){
+    csvstream csvin(testfile);
+    map<string, string> row;
+    cout << "test data:" << '\n';
+
+    while(csvin >> row){
+        total++;
+        string content = row["content"];
+        string label = row["tag"];
+
+        pair<string, double > bestpred = model.calc_prob(content);
+
+        if(label == bestpred.first){
+            correct++;
+        }
+        cout << "  correct = " << label << ", predicted = " << 
+            bestpred.first << ", log-probability score = " <<
+            bestpred.second << endl;
+            cout << "  content = " << row["content"] << '\n' << '\n';
     }
+    cout << "performance: " << correct << " / " << total << 
+     " posts predicted correctly" << '\n';
+}
 
-    try { csvstream csvin(testFileName); }
-    catch(const csvstream_exception &e) {
-        cout << "Error opening file: " << testFileName << endl; return 1;
-    }
 
-    // train the classifier
-    classi.train(trainFileName);
-    
-    // print the trained data
-    classi.printNumPosts();
-    if(debugToggle) { classi.printNumWords(); }; cout << endl;
-    if(debugToggle) { classi.printSecondDebug(); classi.printThirdDebug(); }
 
-    // run the test
-    classi.test(testFileName);
+};
+
+int main(){
+
+  cout.precision(3);
+   
+  Bayestrainer model("train_small.csv", true);
+
+  Classifier Class(true, model, "test_small.csv", "train_small.csv");
+
+  Class.modelinit();
+
+  Class.train();
+  Class.test();
+
+
 }
